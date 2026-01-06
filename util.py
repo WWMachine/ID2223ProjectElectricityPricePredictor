@@ -276,8 +276,15 @@ def create_json_secret(city,latitude,longitude):
     secrets.create_secret(f"SENSOR_LOCATION_JSON_{city.lower()}", str_dict)
     
 
-settings = HopsworksSettings(_env_file=".env")
-os.environ["HOPSWORKS_API_KEY"] = settings.HOPSWORKS_API_KEY.get_secret_value()
+
+api_key = os.getenv("HOPSWORKS_API_KEY")
+
+if not api_key:
+    # Fallback to .env for local development
+    settings = HopsworksSettings(_env_file=".env")
+    api_key = settings.HOPSWORKS_API_KEY.get_secret_value()
+
+os.environ["HOPSWORKS_API_KEY"] = api_key
 
 
 if mode_select == 1:
@@ -909,4 +916,5 @@ if mode_select == 4:
     today = datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
