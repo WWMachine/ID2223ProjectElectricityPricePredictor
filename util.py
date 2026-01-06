@@ -13,7 +13,7 @@ from datetime import date, timedelta
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Patch
-from datetime import datetime, timedelta
+import datetime
 import pytz
 import numpy as np
 
@@ -304,7 +304,7 @@ if mode_select == 1:
 
 
 ###### PART 2 DAILY ######
-from datetime import datetime, timedelta
+
 def forecast_weather(latitude, longitude, city):
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
     retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
@@ -396,7 +396,7 @@ if mode_select == 2:
 
 
 
-    today = datetime.now()
+    today = datetime.datetime.now()
     yesterday = today - timedelta(days=1)
 
 
@@ -703,7 +703,7 @@ def fill_features(hour,batch_data,prev_data):
 def add_first_price_features(fs,batch_data):
     import pytz
     
-    first_hour = (datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1) # REMOVE
+    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1) # REMOVE
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
     first_init_roll = price_group.filter(price_group.date >= first_hour -  timedelta(31)).read()
@@ -889,7 +889,7 @@ if mode_select == 4:
 
     model, fv = get_model(project)
     starttime=first_hour = (
-        datetime.now(pytz.timezone("Europe/Stockholm"))
+        datetime.datetime.now(pytz.timezone("Europe/Stockholm"))
         .replace(hour=0, minute=0, second=0, microsecond=0)
         - timedelta(days=1) 
     ).astimezone(pytz.UTC)
@@ -913,8 +913,9 @@ if mode_select == 4:
     hindcast_df = hindcast(elec_df,monitoring_df)
 
     hindcast_path = plot_price_forecast("SE3",hindcast_df, images_dir + "/hindcast.png", True)
-    today = datetime.now()
+    today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
