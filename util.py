@@ -707,8 +707,7 @@ def add_first_price_features(fs,batch_data):
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
     first_init_roll = price_group.filter(price_group.date >= first_hour -  timedelta(31)).read()
-    print("firstinitroll")
-    print(len(first_init_roll))
+    
     #print(first_init_roll)
     first_init_roll = first_init_roll.sort_values("date").reset_index(drop=True)
     batch_data = fill_features(first_hour,batch_data,first_init_roll)
@@ -725,7 +724,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
     #with pd.option_context('display.max_rows', None, 'display.max_columns', None):
     #    print(batch_data)
     
-    print(len(batch_data))
+    
     for i in range(len(batch_data)):
         
     
@@ -748,13 +747,16 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
                                  "wind_speed_10m_goteborg", "cloud_cover_goteborg"]]
     
         y_pred = retrieved_xgboost_model.predict(X)[0]
+        print("YPREDATORE")
+        print(y_pred)
         batch_data.loc[mask, "pred_price"] = y_pred
         
         new_data = {
             "date": time_obj,
             "price_sek_per_kwh": y_pred,
         }
-
+        print("NEWDATARRRRR")
+        print(new_data)
         
     
         first_init_roll = pd.concat([first_init_roll, pd.DataFrame([new_data])], ignore_index=True)
@@ -918,6 +920,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
