@@ -729,7 +729,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
         
     
         mask = batch_data["date"] == time_obj
-        print(mask)
+        
         if not mask.any():
             break
         
@@ -748,16 +748,14 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
                                  "wind_speed_10m_goteborg", "cloud_cover_goteborg"]]
     
         y_pred = retrieved_xgboost_model.predict(X)[0]
-        print("YPREDATORE")
-        print(y_pred)
+        
         batch_data.loc[mask, "pred_price"] = y_pred
         
         new_data = {
             "date": time_obj,
             "price_sek_per_kwh": y_pred,
         }
-        print("NEWDATARRRRR")
-        print(new_data)
+        
         
     
         first_init_roll = pd.concat([first_init_roll, pd.DataFrame([new_data])], ignore_index=True)
@@ -769,7 +767,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
             # add latest to first init
         time_obj = time_next
         
-    batch_data['days_before_forecast_day'] = np.arange(len(batch_data)) // 24 + 1
+    batch_data['days_before_forecast_day'] = (np.arange(len(batch_data)) // 24 + 1).astype(int)
     
     
     return batch_data
@@ -921,6 +919,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
