@@ -98,14 +98,8 @@ def get_historic_price(price_fg, start_date: date = None, end_date: date = None)
         #)
         #df["price_last_168h_avg"] = df["price_sek_per_kwh"].shift(1).rolling(168).mean()
     else:
-        df_recent = price_fg.read(read_options={"use_hive": False})
-    
-        df_recent["date"] = pd.to_datetime(df_recent["date"], utc=True)
-        
-        cutoff_date = pd.Timestamp(start_date, tz='UTC') - pd.Timedelta(days=31)
-        
-        
-        df_recent = df_recent[df_recent["date"] >= cutoff_date].copy()
+        query = price_fg.select_all().filter(price_fg['date']>= start_date-timedelta(days=31))
+        df_recent = query.read()
         df_recent = df_recent.sort_values('date')
         combined = pd.concat([df_recent, df], ignore_index=True)
 
@@ -922,6 +916,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
