@@ -703,7 +703,7 @@ def fill_features(hour,batch_data,prev_data):
 def add_first_price_features(fs,batch_data):
     import pytz
     
-    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1) # REMOVE
+    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=0) # REMOVE
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
     first_init_roll = price_group.filter(price_group.date >= first_hour -  timedelta(31)).read()
@@ -729,6 +729,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
         
     
         mask = batch_data["date"] == time_obj
+        print(mask)
         if not mask.any():
             break
         
@@ -920,6 +921,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
