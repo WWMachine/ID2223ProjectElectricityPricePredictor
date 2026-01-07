@@ -505,10 +505,10 @@ def df_creation(y_ts, y_pr, X_ts):
 
 def create_dirs():
     # Creating a directory for the model artifacts if it doesn't exist
-    model_dir = f"model"
+    model_dir = f"docs"
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
-    images_dir = model_dir + "/images"
+    images_dir = model_dir + "/assets/img"
     if not os.path.exists(images_dir):
         os.mkdir(images_dir)
     return model_dir, images_dir
@@ -920,6 +920,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
