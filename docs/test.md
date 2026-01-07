@@ -2,7 +2,7 @@
 
 ![Hopsworks Logo](../titanic/assets/img/logo.png)
 
-{% include air-quality.html %}
+{% include price_predict.html %}
 
 {% assign names = "anan_nakagawacho_kuroji,jinryo_main_street,kitajima_tainohama,mima_wakimachi_oaza_inoshiri,miyoshi_ikedacho_machi,naruto_muyacho_tateiwa,nishinoji_main_street,tokushima_shinkuracho" | split: ',' %}
 
