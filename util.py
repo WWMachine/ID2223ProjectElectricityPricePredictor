@@ -767,7 +767,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
             # add latest to first init
         time_obj = time_next
         
-    batch_data['days_before_forecast_day'] = (np.arange(len(batch_data)) // 24 + 1).astype(int)
+    batch_data['days_before_forecast_day'] = (np.arange(len(batch_data)) // 24 + 1).astype(np.int32)
     
     
     return batch_data
@@ -920,6 +920,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
