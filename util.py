@@ -839,6 +839,7 @@ def monitoring_fg(batch_data,fs):
         primary_key=['date','days_before_forecast_day'],
         event_time="date"
     )
+    print(batch_data["days_before_forecast_day"], batch_data["days_before_forecast_day"].dtype)
     monitor_fg.insert(batch_data, wait=True)
 
     return monitor_fg
@@ -919,6 +920,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
