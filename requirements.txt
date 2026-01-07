@@ -1,4 +1,6 @@
-hopsworks[python,great-expectations]
+hopsworks[python,great-expectations]==4.2.*
+hsfs==4.2.*
+pyarrow==14.0.1
 pydantic-settings>=2.6.1
 geopy==2.4.1
 openmeteo-requests
@@ -7,6 +9,5 @@ retry-requests==2.0.0
 xgboost==2.0.3
 scikit-learn==1.2.2
 matplotlib==3.8.3
-#plotly
 seaborn
 nbformat
