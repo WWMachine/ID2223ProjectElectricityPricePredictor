@@ -553,7 +553,7 @@ def fill_features(hour,batch_data,prev_data):
 def add_first_price_features(fs,batch_data):
     import pytz
     
-    first_hour = (datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=0) # REMOVE
+    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=0) # REMOVE
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
     first_init_roll = price_group.filter(price_group.date >= first_hour -  datetime.timedelta(31)).read()
@@ -714,3 +714,4 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
