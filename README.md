@@ -1,6 +1,6 @@
 # ID2223 Project Electricity Price Predictor
 
-The collaborators for this project are Nils Wiebe Werner and Oliver Westfahl Knezevic, the dashboard can be found here: [https://wwmachine.github.io/ID2223ProjectElectricityPricePredictor/](https://wwmachine.github.io/ID2223ProjectElectricityPricePredictor/). The pipeline- and implementation structure is inspired by the laboration 1 in this course ID2223.
+The collaborators for this project are Nils Wiebe Werner and Oliver Westfahl Knezevic, the dashboard can be found here: [DASHBOARD](https://wwmachine.github.io/ID2223ProjectElectricityPricePredictor/). The pipeline- and implementation structure is inspired by the laboration 1 in this course ID2223.
 
 This project is a scheduled price predictor of electricity prices, specifically in the SE3 area of Sweden, based mainly on weather data and the prices 24h ago as well as specifics surrounding the day of the week, month and time of the day. The SE3 area mainly covers the central-south region, excluding the very southern area, and importantly includes Stockholm as well as Gothenburg. It is therefore a major hub with large demand, causing prices to spike above other areas (mainly the northern ones). 
 
@@ -20,9 +20,9 @@ The independent variables concerning weather conditions are taken from Open-Mete
 
 Furthermore, the model takes the electricity price measured exactly 24h ago into consideration. Additional features concerning electricity prices were explored, e.g. prices for the last few hours or different rolling averages, but the model ended up largely depending on these and predictions flattened out. With the 24h difference in mind as well as the specifics of the day of the week and hour of the day, the model may find short cyclical patterns easier instead of just copying the previously predicted hour without logical daily differences in mind.
 
-The data comes from two sources (with three different API endpoints in total), firstly the weather data is as previously mentioned taken from Open-Meteo through their Historical Weather API ([https://open-meteo.com/en/docs/historical-weather-api](https://open-meteo.com/en/docs/historical-weather-api)) as well as Weather Forecast API ([https://open-meteo.com/en/docs](https://open-meteo.com/en/docs)). This API gives us information regarding the temperature, windspeed, cloud coverage and precipitation in the Stockholm and Gothenburg areas. 
+The data comes from two sources (with three different API endpoints in total), firstly the weather data is as previously mentioned taken from Open-Meteo through their [Historical Weather API ](https://open-meteo.com/en/docs/historical-weather-api) as well as [Weather Forecast API](https://open-meteo.com/en/docs). This API gives us information regarding the temperature, windspeed, cloud coverage and precipitation in the Stockholm and Gothenburg areas. 
 
-Secondly, the electricity prices are taken from "Elpriset just nu.se", and their "Elpris API" ([https://www.elprisetjustnu.se/elpris-api](https://www.elprisetjustnu.se/elpris-api)). It is another open-source and free API made to give information regarding electricity prices without complications, once again in JSON format. This API gives us the information needed to both backfill and train our model, as well as updating daily to enable hindcasting while doing inference and forecasting.
+Secondly, the electricity prices are taken from "Elpriset just nu.se", and their [Elpris API](https://www.elprisetjustnu.se/elpris-api). It is another open-source and free API made to give information regarding electricity prices without complications, once again in JSON format. This API gives us the information needed to both backfill and train our model, as well as updating daily to enable hindcasting while doing inference and forecasting.
 
 Below we can see the feature importance charts:
 
