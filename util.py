@@ -895,7 +895,7 @@ if mode_select == 4:
     starttime=first_hour = (
         datetime.datetime.now(pytz.timezone("Europe/Stockholm"))
         .replace(hour=0, minute=0, second=0, microsecond=0)
-        - timedelta(days=1) 
+        - timedelta(days=0) 
     ).astimezone(pytz.UTC)
     combined_data = get_forecast_weather(fs, starttime, keys[0], keys[1])
 
@@ -920,6 +920,7 @@ if mode_select == 4:
     today = datetime.datetime.now()
     upload_to_hops(project,today, forecast_path,hindcast_path)
     
+
 
 
 
