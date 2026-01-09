@@ -34,6 +34,7 @@ Another interesting difference is between the precipitation and cloud coverage a
 
 # Training and inference
 Secondly, we have the training pipeline itself. In this part we use the XGBoost Regressor from the xgboost Python package as our base model architecture considering its strong proven performance. For metrics we use the Mean Squared Error (MSE) and R2 score from the sklearn.metrics package for its ease of interpretability and broad use. 
+The final model trained got an MSE score of 0.20 and an R2 score of 0.27
 
 We use offline batch training considering the relatively low resources needed to train the model, it is a non factor for our project, and mainly the stability of the model that comes with this approach. A good amount of historical data is available and the conditions for it were deemed stable/consistent enough for our project. The dataset is made up of two and a half years worth of historical data. Keeping the big picture in mind and not getting lost in short current changes in electricity pricing was seen as important. It is more about the larger cyclical nature of electricity demand.
 
