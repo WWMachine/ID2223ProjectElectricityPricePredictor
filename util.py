@@ -1,4 +1,3 @@
-
 import requests
 import requests_cache
 import pandas as pd
@@ -11,11 +10,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 from datetime import date, timedelta
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from matplotlib.patches import Patch
+import matplotlib.dates as mdates
+
 import datetime
-import pytz
+
 import numpy as np
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from xgboost import XGBRegressor
+from xgboost import plot_importance
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 
@@ -323,12 +328,7 @@ def price_insert(price_fg,latest_price_df):
 
 
 ###### PART 3 MODEL ######
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from xgboost import XGBRegressor
-from xgboost import plot_importance
-from sklearn.metrics import mean_squared_error, r2_score
+
 
 
 
@@ -508,11 +508,11 @@ def get_model(project):
     
     saved_model_dir = retrieved_model.download()
 
-    retrieved_xgboost_model = XGBRegressor()
+    xgboost_model = XGBRegressor()
 
-    retrieved_xgboost_model.load_model(saved_model_dir + f"/model.json")
+    xgboost_model.load_model(saved_model_dir + f"/model.json")
 
-    return retrieved_xgboost_model, fv
+    return xgboost_model, fv
 
 def get_forecast_weather(fs,today,city1, city2):
     
@@ -565,14 +565,14 @@ def add_first_price_features(fs,batch_data):
     return batch_data, first_hour, first_init_roll
 
 
-def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
+def predictions(hour,batch_data,model,first_init_roll):
     
 
     batch_data["date"] = pd.to_datetime(batch_data["date"], utc=True)
     time_obj = pd.to_datetime(hour, utc=True)
     
     
-    for i in range(len(batch_data)):
+    for _ in range(len(batch_data)):
         
     
         mask = batch_data["date"] == time_obj
@@ -587,7 +587,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
                                  "wind_speed_10m_stockholm", "cloud_cover_stockholm", "temperature_2m_goteborg", "precipitation_goteborg", 
                                  "wind_speed_10m_goteborg", "cloud_cover_goteborg"]]
     
-        y_pred = retrieved_xgboost_model.predict(X)[0]
+        y_pred = model.predict(X)[0]
         
         batch_data.loc[mask, "pred_price"] = y_pred
         
@@ -612,7 +612,7 @@ def predictions(hour,batch_data,retrieved_xgboost_model,first_init_roll):
     
     return batch_data
 
-import matplotlib.dates as mdates
+
 
 def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=False):
     fig, ax = plt.subplots(figsize=(14, 6))
@@ -713,24 +713,3 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
-    
-    
-    
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
