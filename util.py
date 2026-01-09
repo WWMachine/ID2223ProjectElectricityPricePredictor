@@ -619,37 +619,25 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
     fig, ax = plt.subplots(figsize=(14, 6))
 
     df = df.copy()
-    
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
 
     
-    ax.plot(
-        df["date"],
-        df["pred_price"],
-        label="Predicted Electricity Price",
-        color="red",
-        linewidth=1.8
-    )
-
-    
+    ax.plot(df["date"], df["pred_price"], label="Predicted Electricity Price", color="red", linewidth=1.8)
     if hindcast and "price_sek_per_kwh" in df.columns:
-        ax.plot(
-            df["date"],
-            df["price_sek_per_kwh"],
-            label="Actual Price",
-            color="black",
-            linewidth=1.8,
-            alpha=0.8
-        )
+        ax.plot(df["date"], df["price_sek_per_kwh"], label="Actual Price", color="black", linewidth=1.8, alpha=0.8)
 
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=12))   
     
-    
+    ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
 
     
-    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=3))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
+
+    
+    ax.grid(True, which='major', color='gray', linestyle='-', alpha=0.4)
+    
+    ax.grid(True, which='minor', color='gray', linestyle='--', alpha=0.2)
 
     ax.set_xlabel("Time (Hourly)")
     ax.set_ylabel("SEK / kwh")
@@ -658,9 +646,7 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
     else:
         ax.set_title(f"Hourly Electricity Price Forecast {region}")
 
-    
     plt.xticks(rotation=45)
-    ax.grid(True, which='both', alpha=0.3)
     ax.legend()
 
     plt.tight_layout()
@@ -714,4 +700,5 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
 
