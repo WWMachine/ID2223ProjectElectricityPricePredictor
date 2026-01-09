@@ -32,7 +32,7 @@ jobs:
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
         run: |
-          
+          ipython 2_daily_update.ipynb
           ipython 4_daily_inference.ipynb
       - name: github pages publish
         uses: stefanzweifel/git-auto-commit-action@v5
