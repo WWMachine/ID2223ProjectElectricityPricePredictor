@@ -2,7 +2,9 @@
 
 The collaborators for this project are Nils Wiebe Werner and Oliver Westfahl Knezevic, the dashboard can be found here: [https://wwmachine.github.io/ID2223ProjectElectricityPricePredictor/](https://wwmachine.github.io/ID2223ProjectElectricityPricePredictor/). The pipeline- and implementation structure is inspired by the laboration 1 in this course ID2223.
 
-This project is a scheduled price predictor of electricity prices, specifically in the SE3 area of Sweden, based mainly on weather data and the prices 24h ago as well as specifics surrounding the day of the week, month and time of the day. The SE3 area mainly covers the central-south region, excluding the very southern area, and importantly includes Stockholm as well as Gothenburg. It is therefore a major hub with large demand, causing prices to spike above other areas (mainly the northern ones). It is a stateful workflow containing four separate pipelines for the different functionalitites.
+This project is a scheduled price predictor of electricity prices, specifically in the SE3 area of Sweden, based mainly on weather data and the prices 24h ago as well as specifics surrounding the day of the week, month and time of the day. The SE3 area mainly covers the central-south region, excluding the very southern area, and importantly includes Stockholm as well as Gothenburg. It is therefore a major hub with large demand, causing prices to spike above other areas (mainly the northern ones). 
+
+The project uses a stateful approach, relying on Hopsworks as a feature store to create more modular and decoupled pipelines (described below). 
 
 The overall architecture is divided into four separate pipelines:
 
@@ -33,7 +35,7 @@ Another interesting difference is between the precipitation and cloud coverage a
 # Training and inference
 Secondly, we have the training pipeline itself. In this part we use the XGBoost Regressor from the xgboost Python package as our base model architecture considering its strong proven performance. For metrics we simply chose the Mean Squared Error (MSE) and R2 score from the sklearn.metrics package for its ease of interpretability and broad use. 
 
-We use offline batch training considering the relatively low resources needed to train the model, it is a non factor for our project, and mainly the stability of the model that comes with this approach. A good amount of historical data is available and the conditions for it were deemed stable/consistent enough for our project. Keeping the big picture in mind and not getting lost in short current changes in electricity pricing was seen as important. It is more about the larger cyclical nature of electricity demand.
+We use offline batch training considering the relatively low resources needed to train the model, it is a non factor for our project, and mainly the stability of the model that comes with this approach. A good amount of historical data is available and the conditions for it were deemed stable/consistent enough for our project. The dataset is made up of two and a half years worth of historical data. Keeping the big picture in mind and not getting lost in short current changes in electricity pricing was seen as important. It is more about the larger cyclical nature of electricity demand.
 
-Thirdly, and lastly, we have the inference pipeline that once again makes use of a batch approach with scheduled updates to hind- and forecasts each day. It is a stateful approach using Hopsworks to pull daily updated feature data from the Feature Store.
+Finally, we have the inference pipeline that makes use of a sequential approach. The inference runs on a daily schedule creating an hourly forecast for the coming day.
 
