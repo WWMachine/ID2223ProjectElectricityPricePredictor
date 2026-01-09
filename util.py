@@ -8,11 +8,12 @@ import hopsworks
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
-from datetime import date, timedelta
+import datetime
+
+
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-import datetime
 
 import numpy as np
 
@@ -37,11 +38,11 @@ class HopsworksSettings(BaseSettings):
 
     
 
-def get_historic_price(price_fg, start_date: date = None, end_date: date = None):
+def get_historic_price(price_fg, start_date: datetime.date = None, end_date: datetime.date = None):
     AREA = "SE3" 
     if start_date == None: 
-        start_date = date(2023, 12, 17)
-        end_date   = date(2026, 1, 5)
+        start_date = datetime.date(2023, 12, 17)
+        end_date   = datetime.date(2026, 1, 5)
          
 
     all_data = []
@@ -69,7 +70,7 @@ def get_historic_price(price_fg, start_date: date = None, end_date: date = None)
                     "price_sek_per_kwh": entry["SEK_per_kWh"]
                 })
         
-        current += timedelta(days=1)
+        current += datetime.timedelta(days=1)
 
   
     df = pd.DataFrame(all_data)
@@ -89,7 +90,7 @@ def get_historic_price(price_fg, start_date: date = None, end_date: date = None)
         df["price_24h_ago"] = df["price_sek_per_kwh"].shift(24)
         
     else:
-        query = price_fg.select_all().filter(price_fg['date']>= start_date-timedelta(days=31))
+        query = price_fg.select_all().filter(price_fg['date']>= start_date-datetime.timedelta(days=31))
         df_recent = query.read()
         df_recent = df_recent.sort_values('date')
         combined = pd.concat([df_recent, df], ignore_index=True)
@@ -365,8 +366,8 @@ def create_fv(fs,selected_features):
 
 def set_training_data(fv):
 
-    start_date = "2025-10-01" 
-    start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+
+    start_datetime = datetime.datetime(2025, 10, 1)
 
     X_tr, X_ts, y_tr, y_ts = fv.train_test_split(test_start = start_datetime)
 
@@ -552,10 +553,10 @@ def fill_features(hour,batch_data,prev_data):
 def add_first_price_features(fs,batch_data):
     import pytz
     
-    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=0) # REMOVE
+    first_hour = (datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=0) # REMOVE
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
-    first_init_roll = price_group.filter(price_group.date >= first_hour -  timedelta(31)).read()
+    first_init_roll = price_group.filter(price_group.date >= first_hour -  datetime.timedelta(31)).read()
     
     
     first_init_roll = first_init_roll.sort_values("date").reset_index(drop=True)
@@ -600,7 +601,7 @@ def predictions(hour,batch_data,model,first_init_roll):
     
         first_init_roll = pd.concat([first_init_roll, pd.DataFrame([new_data])], ignore_index=True)
         first_init_roll = first_init_roll.sort_values("date").reset_index(drop=True)
-        time_next = time_obj + timedelta(hours=1)
+        time_next = time_obj + datetime.timedelta(hours=1)
     
         if(batch_data["date"]== time_next).any():
             batch_data = fill_features(time_next,batch_data,first_init_roll)
