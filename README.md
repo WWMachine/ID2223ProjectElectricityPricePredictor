@@ -9,7 +9,7 @@ The overall architecture is divided into four separate pipelines:
 1) Backfill pipeline to take in historical data and create our features through this data to insert into our Feature Store on Hopsworks.
 2) Daily update pipeline to update this Feature Store on a daily schedule.
 3) Training pipeline, in which training data is taken from this Feature Store and the model creation and training itself occurs. This model is then pushed onto Hopsworks, which means that this pipeline is not necessary to use for the scheduled daily updates.
-4) Inference pipeline which given the model as well as features on the Feature Store does inference. Both hindcasts and forecasts are produced and saved in this pipeline.
+4) Inference pipeline which given the model as well as features on the Feature Store does inference. The model predicts hourly electricity prices on a daily schedule for one day forward. Both hindcasts and forecasts are produced and saved in this pipeline.
 
 # Features
 Firstly, the backfill pipeline is part of the theoretical overarching feature pipeline, fetching the historical data to set up the necessary features for the training. The second notebook is the secondary part of the feature pipeline, but this part handles the scheduled daily updating of data that is necessary for inference. Both of these notebooks, that make up the feature pipeline, make use of the Hopsworks Feature Store to create the Feature Groups that store the features as well as data that is to be used between both training and inference. 
