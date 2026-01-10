@@ -303,17 +303,17 @@ def forecast_weather(latitude, longitude, city):
     
     hourly_dataframe = pd.DataFrame(data = hourly_data) # remove the unnecessary data so we only have the 24 entries corresponding to the swedish day
 
-    hourly_dataframe["date_swe"] = hourly_dataframe["date"].dt.tz_convert("Europe/Stockholm")
+    #hourly_dataframe["date_swe"] = hourly_dataframe["date"].dt.tz_convert("Europe/Stockholm")
 
-    today_swe = pd.Timestamp.now(tz="Europe/Stockholm").date()
+    #today_swe = pd.Timestamp.now(tz="Europe/Stockholm").date()
     
 
-    df_filtered = hourly_dataframe[hourly_dataframe["date_swe"].dt.date == today_swe].copy()
+    #df_filtered = hourly_dataframe[hourly_dataframe["date_swe"].dt.date == today_swe].copy()
     
-    df_filtered = df_filtered.drop(columns=["date_swe"]).reset_index(drop=True)
+    #df_filtered = df_filtered.drop(columns=["date_swe"]).reset_index(drop=True)
     
     
-    return df_filtered
+    return hourly_dataframe
 
 def get_fgs(fs,city1,city2):
     
@@ -730,3 +730,4 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
