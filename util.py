@@ -9,7 +9,7 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 import datetime
-
+import pytz
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -42,7 +42,7 @@ def get_historic_price(price_fg, start_date: datetime.date = None, end_date: dat
     AREA = "SE3" 
     if start_date == None: 
         start_date = datetime.date(2023, 12, 17)
-        end_date   = datetime.date(2026, 1, 5)
+        end_date   = datetime.date(2026, 1, 7)
          
 
     all_data = []
@@ -61,7 +61,7 @@ def get_historic_price(price_fg, start_date: datetime.date = None, end_date: dat
             
         for entry in daily:
             
-            ts = pd.to_datetime(entry["time_start"], utc=True)
+            ts = pd.to_datetime(entry["time_start"]) #read prices in swedish time
             
       
             if ts.minute == 0:
@@ -79,11 +79,19 @@ def get_historic_price(price_fg, start_date: datetime.date = None, end_date: dat
 
    
     df["date"] = pd.to_datetime(df["date"], utc=True)
+
+    
+    df["date"] = df["date"].dt.tz_convert("Europe/Stockholm")
+
+    
     df["hour"] = df["date"].dt.hour
-    df["day"] = df["date"].dt.day  
+    df["day"] = df["date"].dt.day
     df["month"] = df["date"].dt.month
 
-    df["date"] = df["date"].dt.tz_convert("Europe/Stockholm")
+
+    df["date"] = df["date"].dt.tz_convert("UTC")# convert to utc for feature store
+
+    
     if price_fg == None:
         df.sort_values("date").reset_index(drop=True)
         
@@ -93,19 +101,21 @@ def get_historic_price(price_fg, start_date: datetime.date = None, end_date: dat
         query = price_fg.select_all().filter(price_fg['date']>= start_date-datetime.timedelta(days=31))
         df_recent = query.read()
         df_recent = df_recent.sort_values('date')
+        
+        df_recent["date"] = pd.to_datetime(df_recent["date"], utc=True)
+      
+        new_timestamps = df["date"]
+
         combined = pd.concat([df_recent, df], ignore_index=True)
 
-      
-        combined = combined.sort_values("date")
-
+        combined = combined.sort_values("date").drop_duplicates('date')
         
         combined["price_24h_ago"] = combined["price_sek_per_kwh"].shift(24)
         
-        combined["date"] = pd.to_datetime(combined["date"], utc=True)  
+        df = combined[combined["date"].isin(new_timestamps)].reset_index(drop=True)
         
         
-        
-        df = combined.iloc[len(df_recent):].reset_index(drop=True)
+
 
     return df
 
@@ -122,20 +132,18 @@ def get_historical_weather(city, start_date,  end_date, latitude, longitude):
 
     
     url = "https://archive-api.open-meteo.com/v1/archive"
-    params = {
+    params = { # read one day before start and one day after end in the range to cmake sure values exist for the edge cases when handling utc conversion
         "latitude": latitude,
         "longitude": longitude,
-        "start_date": start_date,
-        "end_date": end_date,
+        "start_date": (pd.to_datetime(start_date) - pd.Timedelta(days=1)).strftime('%Y-%m-%d'),
+        "end_date": (pd.to_datetime(end_date) + pd.Timedelta(days=1)).strftime('%Y-%m-%d'),
         "hourly": ["temperature_2m", "precipitation", "wind_speed_10m", "cloud_cover"],
     }
     responses = openmeteo.weather_api(url, params=params)
 
     
     response = responses[0]
-    print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
-    print(f"Elevation: {response.Elevation()} m asl")
-    print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
+
 
     
     hourly = response.Hourly()
@@ -261,6 +269,7 @@ def forecast_weather(latitude, longitude, city):
         "latitude": latitude,
         "longitude": longitude,
         "hourly": ["temperature_2m", "precipitation", "wind_speed_10m", "cloud_cover"],
+        "past_days": 1, # need to get 23:00 utc because that is 00:00 swedish time
         "forecast_days": 1,
     }
     responses = openmeteo.weather_api(url, params=params)
@@ -291,9 +300,20 @@ def forecast_weather(latitude, longitude, city):
     hourly_data[f"wind_speed_10m_{city}"] = hourly_wind_speed_10m
     hourly_data[f"cloud_cover_{city}"] = hourly_cloud_cover
 
+    
+    hourly_dataframe = pd.DataFrame(data = hourly_data) # remove the unnecessary data so we only have the 24 entries corresponding to the swedish day
 
-    hourly_dataframe = pd.DataFrame(data = hourly_data)
-    return hourly_dataframe
+    hourly_dataframe["date_swe"] = hourly_dataframe["date"].dt.tz_convert("Europe/Stockholm")
+
+    today_swe = pd.Timestamp.now(tz="Europe/Stockholm").date()
+    
+
+    df_filtered = hourly_dataframe[hourly_dataframe["date_swe"].dt.date == today_swe].copy()
+    
+    df_filtered = df_filtered.drop(columns=["date_swe"]).reset_index(drop=True)
+    
+    
+    return df_filtered
 
 def get_fgs(fs,city1,city2):
     
@@ -516,51 +536,59 @@ def get_model(project):
     return xgboost_model, fv
 
 def get_forecast_weather(fs,today,city1, city2):
+    today = today - datetime.timedelta(hours=1)
+    end_date = today + datetime.timedelta(hours=23)
     
+
+
     weather_fg_1 = fs.get_feature_group(
         name=f"weather_{city1.lower()}",
         version=1,
     )
-    batch_data_1 = weather_fg_1.filter(weather_fg_1.date >= today).read()
 
+    batch_data_1 = weather_fg_1.filter(
+        (weather_fg_1.date >= today) & (weather_fg_1.date <= end_date)
+    ).read()
+    
     weather_fg_2 = fs.get_feature_group(
         name=f"weather_{city2.lower()}",
         version=1,
     )
-    batch_data_2 = weather_fg_2.filter(weather_fg_2.date >= today).read()
+    batch_data_2 = weather_fg_2.filter(
+        (weather_fg_2.date >= today) & (weather_fg_2.date <= end_date)
+    ).read()
+    
 
     combined_data = pd.merge(batch_data_1, batch_data_2, on="date", how="inner")
+    
 
-    combined_data = combined_data.sort_values("date").reset_index(drop=True)
-
-    return combined_data
+    return combined_data.sort_values("date").reset_index(drop=True)
 
 def fill_features(hour,batch_data,prev_data):
-    prev_data["date"] = pd.to_datetime(prev_data["date"], utc=True)
-    prev_data = prev_data.sort_values("date").reset_index(drop=True)
-    price_series = prev_data["price_sek_per_kwh"]
+    hour_swe = hour.astimezone(pytz.timezone("Europe/Stockholm"))
     
-    batch_data.loc[batch_data["date"] == hour,"hour"] = hour.hour
-    batch_data.loc[batch_data["date"] == hour,"day"] = hour.day
-    batch_data.loc[batch_data["date"] == hour,"month"] = hour.month
-    batch_data.loc[batch_data["date"] == hour,"price_24h_ago"] = price_series.iloc[-24]
+    mask = batch_data["date"] == hour
     
-    
-    
+    batch_data.loc[mask, "hour"] = hour_swe.hour
+    batch_data.loc[mask, "day"] = hour_swe.day
+    batch_data.loc[mask, "month"] = hour_swe.month
+
+    batch_data.loc[mask, "price_24h_ago"] = prev_data["price_sek_per_kwh"].iloc[-24]
     
     return batch_data
 
 def add_first_price_features(fs,batch_data):
-    import pytz
+
     
-    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=0) # REMOVE
+    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=23, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1) # 1 day is default
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
-    first_init_roll = price_group.filter(price_group.date >= first_hour -  datetime.timedelta(31)).read()
+    first_init_roll = price_group.filter(price_group.date >= first_hour -  datetime.timedelta(3)).read()
     
     
     first_init_roll = first_init_roll.sort_values("date").reset_index(drop=True)
     batch_data = fill_features(first_hour,batch_data,first_init_roll)
+    
     
 
     return batch_data, first_hour, first_init_roll
@@ -578,6 +606,7 @@ def predictions(hour,batch_data,model,first_init_roll):
     
         mask = batch_data["date"] == time_obj
         
+        
         if not mask.any():
             break
         
@@ -589,6 +618,7 @@ def predictions(hour,batch_data,model,first_init_roll):
                                  "wind_speed_10m_goteborg", "cloud_cover_goteborg"]]
     
         y_pred = model.predict(X)[0]
+        
         
         batch_data.loc[mask, "pred_price"] = y_pred
         
@@ -700,5 +730,3 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
-
-
