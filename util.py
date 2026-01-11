@@ -560,8 +560,7 @@ def get_forecast_weather(fs,today,city1, city2):
     
 
     combined_data = pd.merge(batch_data_1, batch_data_2, on="date", how="inner")
-    with pd.option_context('display.max_rows', None):
-        print("COMBINED", combined_data["date"])
+    
 
     return combined_data.sort_values("date").reset_index(drop=True)
 
@@ -581,7 +580,7 @@ def fill_features(hour,batch_data,prev_data):
 def add_first_price_features(fs,batch_data):
 
     
-    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=23, minute=0, second=0, microsecond=0) - datetime.timedelta(days=2) # 1 day is default
+    first_hour = (datetime.datetime.now(tz=pytz.UTC)).replace(hour=23, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1) # 1 day is default
     
     price_group = fs.get_feature_group(name=f"price_swedene3", version=1)
     first_init_roll = price_group.filter(price_group.date >= first_hour -  datetime.timedelta(3)).read()
@@ -600,7 +599,7 @@ def predictions(hour,batch_data,model,first_init_roll):
 
     batch_data["date"] = pd.to_datetime(batch_data["date"], utc=True)
     time_obj = pd.to_datetime(hour, utc=True)
-    print("LEN BATCH PRED", len(batch_data))
+    
     
     for _ in range(len(batch_data)):
         
@@ -641,9 +640,7 @@ def predictions(hour,batch_data,model,first_init_roll):
         
     batch_data['days_before_forecast_day'] = (np.arange(len(batch_data)) // 24 + 1).astype(np.int32)
     
-    print(len(batch_data))
-    print(batch_data["pred_price"])
-    print(batch_data["date"])
+    
     return batch_data
 
 
@@ -657,8 +654,7 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
     df["date"] = df["date"].dt.tz_convert("Europe/Stockholm").dt.tz_localize(None)
     df = df.sort_values("date")
 
-    with pd.option_context('display.max_rows', None):
-        print(df["date"])
+    
 
     
     ax.plot(df["date"], df["pred_price"], label="Predicted Electricity Price", color="red", linewidth=1.8)
@@ -714,9 +710,7 @@ def monitor_df(monitor_fg):
     time.sleep(5)
     monitoring_df = monitor_fg.filter(monitor_fg.days_before_forecast_day == 1).read()
     
-    print(f"DEBUG: monitoring_df rows fetched: {len(monitoring_df)}")
-    if not monitoring_df.empty:
-        print(f"DEBUG: Latest date in monitor: {monitoring_df['date'].max()}")
+    
     return monitoring_df
 
 def elprice_pred_df(fs):
@@ -729,13 +723,10 @@ def hindcast(electricity_price_df, monitoring_df):
     outcome_df = electricity_price_df[['date', 'price_sek_per_kwh']].sort_values(by=['date'])
     preds_df =  monitoring_df[['date', 'pred_price']].sort_values(by=['date'])
     
-    with pd.option_context('display.max_rows', None):
-        print("PREDS", preds_df)
+    
     hindcast_df = pd.merge(preds_df, outcome_df, on="date")
     hindcast_df = hindcast_df.sort_values(by=['date'])
-    with pd.option_context('display.max_rows', None):
     
-        print("HINDCAST DF", hindcast_df)
     
     return hindcast_df
 
@@ -748,6 +739,7 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
 
 
 
