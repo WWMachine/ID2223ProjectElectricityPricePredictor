@@ -599,7 +599,7 @@ def predictions(hour,batch_data,model,first_init_roll):
 
     batch_data["date"] = pd.to_datetime(batch_data["date"], utc=True)
     time_obj = pd.to_datetime(hour, utc=True)
-    
+    print("LEN BATCH PRED", len(batch_data))
     
     for _ in range(len(batch_data)):
         
@@ -640,7 +640,8 @@ def predictions(hour,batch_data,model,first_init_roll):
         
     batch_data['days_before_forecast_day'] = (np.arange(len(batch_data)) // 24 + 1).astype(np.int32)
     
-    
+    print(len(batch_data))
+    print(batch_data["pred_price"])
     return batch_data
 
 
@@ -704,10 +705,13 @@ def monitoring_fg(batch_data,fs):
     return monitor_fg
 
 def monitor_df(monitor_fg):
-    
+    import time
+    time.sleep(5)
     monitoring_df = monitor_fg.filter(monitor_fg.days_before_forecast_day == 1).read()
     
-
+    print(f"DEBUG: monitoring_df rows fetched: {len(monitoring_df)}")
+    if not monitoring_df.empty:
+        print(f"DEBUG: Latest date in monitor: {monitoring_df['date'].max()}")
     return monitoring_df
 
 def elprice_pred_df(fs):
@@ -735,4 +739,5 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
 
