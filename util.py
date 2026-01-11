@@ -537,7 +537,7 @@ def get_model(project):
 
 def get_forecast_weather(fs,today,city1, city2):
     today = today - datetime.timedelta(hours=1)
-    end_date = today + datetime.timedelta(hours=23) 
+    end_date = today + datetime.timedelta(hours=24) 
     
 
 
@@ -735,3 +735,4 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
