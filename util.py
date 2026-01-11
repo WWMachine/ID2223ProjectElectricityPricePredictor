@@ -537,7 +537,7 @@ def get_model(project):
 
 def get_forecast_weather(fs,today,city1, city2):
     today = today - datetime.timedelta(hours=1)
-    end_date = today + datetime.timedelta(hours=23)
+    end_date = today + datetime.timedelta(hours=23) 
     
 
 
@@ -649,7 +649,9 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
     fig, ax = plt.subplots(figsize=(14, 6))
 
     df = df.copy()
-    df["date"] = pd.to_datetime(df["date"])
+    
+    df["date"] = pd.to_datetime(df["date"], utc=True)
+    df["date"] = df["date"].dt.tz_convert("Europe/Stockholm").dt.tz_localize(None)
     df = df.sort_values("date")
 
     
@@ -658,23 +660,25 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
         ax.plot(df["date"], df["price_sek_per_kwh"], label="Actual Price", color="black", linewidth=1.8, alpha=0.8)
 
     
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=[0, 6, 12, 18]))
+    
+    
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
 
     
     ax.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
 
     
-    ax.grid(True, which='major', color='gray', linestyle='-', alpha=0.4)
+    ax.set_xlim(df["date"].min(), df["date"].max())
+
     
+    ax.grid(True, which='major', color='gray', linestyle='-', alpha=0.4)
     ax.grid(True, which='minor', color='gray', linestyle='--', alpha=0.2)
 
-    ax.set_xlabel("Time (Hourly)")
+    ax.set_xlabel("Swedish Local Time")
     ax.set_ylabel("SEK / kwh")
-    if hindcast:
-        ax.set_title(f"Hourly Electricity Price Hindcast {region}")
-    else:
-        ax.set_title(f"Hourly Electricity Price Forecast {region}")
+    
+    ax.set_title(f"Hourly Electricity Price {'Hindcast' if hindcast else 'Forecast'} {region}")
 
     plt.xticks(rotation=45)
     ax.legend()
@@ -694,6 +698,7 @@ def monitoring_fg(batch_data,fs):
         primary_key=['date','days_before_forecast_day'],
         event_time="date"
     )
+    
     monitor_fg.insert(batch_data, wait=True)
 
     return monitor_fg
@@ -730,5 +735,3 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
-
-
