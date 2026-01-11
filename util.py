@@ -560,7 +560,8 @@ def get_forecast_weather(fs,today,city1, city2):
     
 
     combined_data = pd.merge(batch_data_1, batch_data_2, on="date", how="inner")
-    
+    with pd.option_context('display.max_rows', None):
+        print("COMBINED", combined_data["date"])
 
     return combined_data.sort_values("date").reset_index(drop=True)
 
@@ -642,6 +643,7 @@ def predictions(hour,batch_data,model,first_init_roll):
     
     print(len(batch_data))
     print(batch_data["pred_price"])
+    print(batch_data["date"])
     return batch_data
 
 
@@ -654,6 +656,9 @@ def plot_price_forecast(region: str, df: pd.DataFrame, file_path: str, hindcast=
     df["date"] = pd.to_datetime(df["date"], utc=True)
     df["date"] = df["date"].dt.tz_convert("Europe/Stockholm").dt.tz_localize(None)
     df = df.sort_values("date")
+
+    with pd.option_context('display.max_rows', None):
+        print(df["date"])
 
     
     ax.plot(df["date"], df["pred_price"], label="Predicted Electricity Price", color="red", linewidth=1.8)
@@ -724,9 +729,13 @@ def hindcast(electricity_price_df, monitoring_df):
     outcome_df = electricity_price_df[['date', 'price_sek_per_kwh']].sort_values(by=['date'])
     preds_df =  monitoring_df[['date', 'pred_price']].sort_values(by=['date'])
     
-    
+    with pd.option_context('display.max_rows', None):
+        print("PREDS", preds_df)
     hindcast_df = pd.merge(preds_df, outcome_df, on="date")
     hindcast_df = hindcast_df.sort_values(by=['date'])
+    with pd.option_context('display.max_rows', None):
+    
+        print("HINDCAST DF", hindcast_df)
     
     return hindcast_df
 
@@ -739,5 +748,6 @@ def upload_to_hops(project, today,pred_path,hind_path):
         dataset_api.mkdir("Resources/SE3")
     dataset_api.upload(pred_path, f"Resources/SE3/forecast_{str_today}", overwrite=True)
     dataset_api.upload(hind_path, f"Resources/SE3/hindcast_{str_today}", overwrite=True)
+
 
 
