@@ -31,6 +31,7 @@ jobs:
       - name: execute python workflows from bash script
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          TZ: 'Europe/Stockholm'
         run: |
           ipython 2_daily_update.ipynb
           ipython 4_daily_inference.ipynb
